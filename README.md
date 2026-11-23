@@ -67,3 +67,8 @@ Die App läuft im Querformat (Kamera oben links), wie ein Camcorder.
 | `CameraController.swift` | Kamera, Mikrofon, Aufnahme |
 | `CamcorderModel.swift` | Laufwerk: REC/PLAY/REW/FF/STOP |
 | `CamcorderView.swift`, `TapeListView.swift`, `VideoViews.swift` | Oberfläche |
+
+
+## Lizenz
+
+**Alle Rechte vorbehalten.** Dieser Code ist zwar öffentlich sichtbar, darf aber ohne meine schriftliche Erlaubnis **nicht** verwendet, kopiert, verändert oder weitergegeben werden. Details stehen in der Datei [`LICENSE`](LICENSE).
