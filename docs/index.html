@@ -46,6 +46,7 @@
         <canvas id="fx" width="160" height="120"></canvas>
         <div id="osd">
           <div class="osd-top"><span id="osdMode">STBY</span><span id="osdCounter">0:00:00</span></div>
+          <div id="osdZoom" class="hidden"><span>W</span><span class="track"><span class="fill"></span></span><span>T</span><span class="zlabel"></span></div>
           <div class="osd-bottom"><span id="osdHint"></span><span id="osdName"></span></div>
         </div>
         <div id="screenMessage" class="hidden"></div>
@@ -55,9 +56,12 @@
     </div>
 
     <div class="controls">
-      <button id="btnEject" class="small">
-        <svg viewBox="0 0 24 24"><path d="M12 4l8 10H4zM4 17h16v3H4z"/></svg><span>EJECT</span>
-      </button>
+      <div class="row">
+        <button id="btnEject" class="small" aria-label="Auswerfen">
+          <svg viewBox="0 0 24 24"><path d="M12 4l8 10H4zM4 17h16v3H4z"/></svg><span>EJECT</span>
+        </button>
+        <button id="btnDate" class="small"><span>DATUM</span></button>
+      </div>
       <button id="btnRec" class="rec"><span class="dot"></span><span class="label">REC</span></button>
       <div class="row">
         <button id="btnRew" aria-label="Zurückspulen"><svg viewBox="0 0 24 24"><path d="M11 6v12L2 12zM21 6v12l-9-6z"/></svg></button>
@@ -67,7 +71,10 @@
         <button id="btnPlay" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg></button>
         <button id="btnStop" aria-label="Stopp"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button>
       </div>
-      <button id="btnDate" class="small"><span>DATUM</span></button>
+      <div class="row zoom-row">
+        <button id="btnZoomW" class="small" aria-label="Weitwinkel">W</button>
+        <button id="btnZoomT" class="small" aria-label="Tele">T</button>
+      </div>
     </div>
 
     <!-- Unsichtbar: Kamerabild als Quelle für den VHS-Effekt -->

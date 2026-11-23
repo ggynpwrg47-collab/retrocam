@@ -47,6 +47,7 @@ Die App bleibt dauerhaft auf dem iPhone. Wenn sich am Code etwas ändert, holt s
 | **■** | Stopp – zurück zum Sucher, das Band bleibt an der Stelle |
 | **◀◀ / ▶▶** | Zurück-/Vorspulen mit Bild (nochmal drücken = Pause) |
 | **Bandanzeige** | Antippen/ziehen = direkt an diese Stelle spulen |
+| **W / T** | Zoom (gedrückt halten), oder mit zwei Fingern auf dem Bild |
 | **DATUM** | Datums-/Zeitstempel ein/aus |
 | **EJECT** | Zurück zur Kassettenliste |
 
@@ -56,6 +57,8 @@ Am besten **quer halten** – dann gibt's das volle 4:3-Camcorderbild. Hochkant 
 
 ## Gut zu wissen
 
+- **Zoom:** Wenn das iPhone es dem Browser erlaubt, wird der echte Kamera-Zoom benutzt, sonst ein Digitalzoom bis 4x (Anzeige „D.ZOOM“ – wie bei alten Camcordern).
+- **Speicheranzeige:** Die Zahl „Safari erlaubt RetroCam bis ca. …“ legt Safari selbst fest (abhängig vom Speicher des iPhones), sie ist nicht in der App eingestellt.
 - **Speicher:** Die Videos liegen im Speicher der Web-App auf dem iPhone. Wenn du die App vom Home-Bildschirm löschst, sind auch die Kassetten weg – also wichtige Kassetten vorher „Als Video speichern“.
 - **Während der Aufnahme** die App im Vordergrund lassen (beim Wechsel in eine andere App wird die Aufnahme automatisch gestoppt).
 - Beim Abspielen schaltet die App Kamera und Mikrofon kurz ab (sonst ist der Ton auf dem iPhone sehr leise) – genau wie beim Umschalten CAMERA/VCR am echten Camcorder.

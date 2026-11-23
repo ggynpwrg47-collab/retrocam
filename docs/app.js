@@ -71,8 +71,12 @@ async function updateStorage() {
   if (!navigator.storage || !navigator.storage.estimate) return;
   try {
     const { usage, quota } = await navigator.storage.estimate();
-    const mb = (b) => (b / 1024 / 1024).toFixed(0);
-    $('#storage').textContent = `Speicher: ${mb(usage)} MB belegt${quota ? ` von ca. ${mb(quota)} MB` : ''}`;
+    const size = (b) => (b >= 1024 ** 3
+      ? `${(b / 1024 ** 3).toLocaleString('de-DE', { maximumFractionDigits: 1 })} GB`
+      : `${Math.round(b / 1024 ** 2)} MB`);
+    // quota = Obergrenze, die Safari dieser App zugesteht (richtet sich nach dem iPhone-Speicher)
+    $('#storage').textContent = `Kassetten belegen ${size(usage)}` +
+      (quota ? ` · Safari erlaubt RetroCam bis ca. ${size(quota)}` : '');
   } catch (e) { /* egal */ }
 }
 

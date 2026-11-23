@@ -88,10 +88,18 @@ export class Deck {
     this.snowUntil = 0;
     this.lastFrame = 0;
     this.showDate = localStorage.getItem('showDate') !== '0';
+    this.osdZoom = this.$('#osdZoom');
+    this.zoom = 1;
+    this.zoomMin = 1;
+    this.zoomMax = 4;
+    this.hwZoom = false;   // echter Kamera-Zoom verfügbar?
+    this.zoomDir = 0;      // -1 = W, +1 = T (Taste gehalten)
+    this.zoomShownUntil = 0;
     this.mimeType = pickMimeType();
 
     this.bindButtons();
     this.bindTapeBar();
+    this.bindZoom();
 
     this.vcr.addEventListener('seeked', () => { this.seekPending = false; });
     this.vcr.addEventListener('error', () => { this.seekPending = false; });
@@ -118,6 +126,7 @@ export class Deck {
     this.head = Math.min(Math.max(0, tape.head || 0), tapeLength(tape));
     this.mode = 'standby';
     this.busy = false;
+    this.zoom = this.zoomMin;
     this.segIndex = -1;
     this.loadedClip = null;
     this.vcr.removeAttribute('src');
@@ -181,6 +190,7 @@ export class Deck {
         this.camVideo.srcObject = stream;
         await this.camVideo.play().catch(() => {});
         this.hideMessage();
+        this.setupZoom();
         return true;
       } catch (e) {
         console.error(e);
@@ -210,8 +220,9 @@ export class Deck {
 
     if (this.showsCamera() && this.vhs && this.stream) {
       const glitch = Math.max(0, 1 - (now - this.glitchStart) / 600);
-      this.vhs.render(this.camVideo, { glitch, showStamp: this.showDate, time: now / 1000 });
+      this.vhs.render(this.camVideo, { glitch, showStamp: this.showDate, time: now / 1000, zoom: this.hwZoom ? 1 : this.zoom });
     }
+    if (this.zoomDir && this.showsCamera()) this.setZoom(this.zoom * Math.exp(this.zoomDir * (Math.log(this.zoomMax / this.zoomMin) / 2.5) * dt)); // ganzer Bereich in ca. 2,5 s
 
     if (this.mode === 'recording' && this.rec) {
       this.head = this.rec.startHead + (performance.now() - this.rec.t0) / 1000;
@@ -580,6 +591,95 @@ export class Deck {
     if (this.mode === 'recording' && this.head < len - 0.05) hint = 'ÜBERSPIELEN';
     else if (this.mode === 'standby' && !this.busy && this.head < len - 0.05) hint = 'REC = ÜBERSPIELEN';
     if (hint !== this.lastHint) { this.osdHint.textContent = hint; this.lastHint = hint; }
+
+    const showZoom = this.showsCamera() && (now < this.zoomShownUntil || this.zoomDir !== 0);
+    this.osdZoom.classList.toggle('hidden', !showZoom);
+    if (showZoom) {
+      const range = Math.log(this.zoomMax / this.zoomMin) || 1;
+      const pos = Math.log(this.zoom / this.zoomMin) / range;
+      this.osdZoomFill.style.width = `${Math.round(Math.min(1, Math.max(0, pos)) * 100)}%`;
+      const label = `${this.hwZoom ? '' : 'D.'}ZOOM ${this.zoom.toFixed(1)}x`;
+      if (label !== this.lastZoomLabel) { this.osdZoomLabel.textContent = label; this.lastZoomLabel = label; }
+    }
+  }
+
+  // ---------- Zoom ----------
+
+  /** Nach dem Kamerastart: echten Kamera-Zoom nutzen, wenn der Browser ihn anbietet. */
+  setupZoom() {
+    const track = this.stream && this.stream.getVideoTracks()[0];
+    const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+    const prevFactor = this.zoom / this.zoomMin;
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      this.hwZoom = true;
+      this.zoomMin = caps.zoom.min;
+      this.zoomMax = Math.min(caps.zoom.max, caps.zoom.min * 10);
+    } else {
+      this.hwZoom = false;
+      this.zoomMin = 1;
+      this.zoomMax = 4;
+    }
+    this.zoom = -1; // erzwingt Anwenden
+    this.setZoom(this.zoomMin * prevFactor, true);
+  }
+
+  setZoom(value, silent) {
+    const z = Math.min(this.zoomMax, Math.max(this.zoomMin, value));
+    if (Math.abs(z - this.zoom) < 1e-4) return;
+    this.zoom = z;
+    if (!silent) this.zoomShownUntil = performance.now() + 1500;
+    if (this.hwZoom) this.applyHardwareZoom();
+  }
+
+  applyHardwareZoom() {
+    const track = this.stream && this.stream.getVideoTracks()[0];
+    if (!track) return;
+    if (this.zoomApplying) { this.zoomPending = true; return; }
+    this.zoomApplying = true;
+    track.applyConstraints({ advanced: [{ zoom: this.zoom }] })
+      .catch(() => { this.hwZoom = false; this.zoomMin = 1; this.zoomMax = 4; this.zoom = 1; })
+      .finally(() => {
+        this.zoomApplying = false;
+        if (this.zoomPending) { this.zoomPending = false; this.applyHardwareZoom(); }
+      });
+  }
+
+  bindZoom() {
+    this.osdZoomFill = this.$('#osdZoom .fill');
+    this.osdZoomLabel = this.$('#osdZoom .zlabel');
+    // W/T-Wippe: gedrückt halten
+    for (const [id, dir] of [['#btnZoomW', -1], ['#btnZoomT', 1]]) {
+      const btn = this.$(id);
+      const stop = () => { if (this.zoomDir === dir) this.zoomDir = 0; btn.classList.remove('active'); };
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (!this.showsCamera()) return;
+        btn.setPointerCapture(e.pointerId);
+        btn.classList.add('active');
+        this.zoomDir = dir;
+        this.zoomShownUntil = performance.now() + 1500;
+      });
+      btn.addEventListener('pointerup', stop);
+      btn.addEventListener('pointercancel', stop);
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+    // Zwei-Finger-Zoom auf dem Bild
+    const screen = this.$('#screen');
+    const touches = new Map();
+    let startDist = 0, startZoom = 1;
+    const dist = () => { const [a, b] = [...touches.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+    screen.addEventListener('pointerdown', (e) => {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2) { startDist = dist(); startZoom = this.zoom; }
+    });
+    screen.addEventListener('pointermove', (e) => {
+      if (!touches.has(e.pointerId)) return;
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2 && startDist > 10 && this.showsCamera()) this.setZoom(startZoom * dist() / startDist);
+    });
+    const end = (e) => { touches.delete(e.pointerId); startDist = 0; };
+    screen.addEventListener('pointerup', end);
+    screen.addEventListener('pointercancel', end);
   }
 
   barTotal() { return Math.max(this.length(), this.head, 10) * 1.08; }

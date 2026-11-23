@@ -195,7 +195,7 @@ export class VHSRenderer {
   }
 
   /** Zeichnet einen Frame. Gibt false zurück, wenn noch kein Kamerabild da ist. */
-  render(video, { glitch = 0, showStamp = true, time = 0 } = {}) {
+  render(video, { glitch = 0, showStamp = true, time = 0, zoom = 1 } = {}) {
     if (!video || video.readyState < 2 || !video.videoWidth) return false;
     const gl = this.gl;
 
@@ -215,6 +215,8 @@ export class VHSRenderer {
     const target = WIDTH / HEIGHT;
     let sx = 1, sy = 1;
     if (va > target) sx = target / va; else sy = va / target;
+    sx /= zoom; // digitaler Zoom: kleineren Ausschnitt aus der Mitte nehmen
+    sy /= zoom;
     gl.uniform2f(this.u.uCropScale, sx, sy);
     gl.uniform2f(this.u.uCropOffset, (1 - sx) / 2, (1 - sy) / 2);
 
