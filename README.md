@@ -86,3 +86,10 @@ Lokal testen: `cd docs && python3 -m http.server` und http://localhost:8000 öff
 ## Alternative: native iPhone-App
 
 Im Ordner `RetroCam.swiftpm` liegt zusätzlich eine native SwiftUI-Version (siehe Branch `claude/epic-carson-enw0mf`). Die muss allerdings per Mac/Xcode installiert werden und läuft mit kostenloser Apple-ID nur 7 Tage.
+
+
+## Lizenz
+
+**Alle Rechte vorbehalten.** Dieser Code ist zwar öffentlich sichtbar, darf aber ohne meine schriftliche Erlaubnis **nicht** verwendet, kopiert, verändert oder weitergegeben werden. Details stehen in der Datei [`LICENSE`](LICENSE).
+
+Ausgenommen sind die Fremd-Bibliotheken im Ordner `docs/vendor/` (mp4box.js, BSD-3-Clause; mp4-muxer, MIT). Für sie gelten ihre eigenen Lizenzen.
