@@ -11,7 +11,11 @@ Ein VHS-Camcorder fürs iPhone – als **Web-App**: einmal über Safari auf den 
 - **Weiterfilmen:** REC → STOP → REC … jede Aufnahme hängt genau dort an, wo das Band steht.
 - **Zurückspulen & Überschreiben:** Mit ◀◀ zurückspulen (oder auf die Bandanzeige tippen/ziehen) und REC drücken – ab dieser Stelle wird so lange überschrieben, wie du filmst. Was danach kommt, bleibt erhalten.
 - **Laufwerk:** REC, PLAY/PAUSE, STOP, ◀◀, ▶▶, Bandzählwerk, Spul-Störbalken, Schnee am Bandende.
-- **Als Video speichern:** In der Kassettenliste auf `•••` → „Als Video speichern“. Die Kassette wird in Echtzeit überspielt (wie früher auf den Videorekorder), danach „Teilen → Video sichern“ → landet in Fotos.
+- **Als Video speichern:** In der Kassettenliste auf `•••` → „Als Video speichern“, danach „Teilen → Video sichern“ (Fotos) oder „In Dateien sichern“. Das geht schnell:
+  - Ohne Überspielstellen mitten in alten Aufnahmen werden die Aufnahmen direkt zusammenkopiert – Sekunden, auch bei langen Bändern.
+  - Mit Überspielstellen wird das Video mit dem Video-Chip des iPhones neu berechnet – deutlich schneller als Echtzeit, bildgenau geschnitten.
+  - Nur falls beides auf einem Gerät nicht klappt, wird als Notlösung in Echtzeit überspielt.
+  - Während des Exports bleibt der Bildschirm an. Kurzzeitig wird zusätzlicher freier Speicher in Größe der Kassette gebraucht.
 - Funktioniert offline. Alle Videos bleiben auf deinem iPhone (im Speicher der Web-App).
 
 ## Einrichten (einmalig)
@@ -66,7 +70,9 @@ Reines HTML/JavaScript ohne Build-Schritt, alles im Ordner [`docs/`](docs):
 | `deck.js` | Laufwerk: Kamera, Aufnahme (MediaRecorder), Wiedergabe, Spulen, Überschreiben |
 | `tape.js` | Datenmodell und Überschreib-Logik |
 | `db.js` | Speicherung in IndexedDB |
-| `exporter.js` | Überspielen der ganzen Kassette in ein Video |
+| `remux.js` | Schneller Export: Zusammenkopieren bzw. Umrechnen per WebCodecs |
+| `exporter.js` | Export-Ablauf inkl. Echtzeit-Notlösung |
+| `vendor/` | [mp4box.js](https://github.com/gpac/mp4box.js) und [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) (MP4 lesen/schreiben) |
 | `app.js` | Kassettenliste |
 | `sw.js`, `manifest.webmanifest` | Offline-Betrieb und Home-Bildschirm-App |
 

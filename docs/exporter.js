@@ -1,8 +1,10 @@
-// Export: Die ganze Kassette wird in Echtzeit auf ein neues Video "überspielt"
-// (wie früher vom Camcorder auf den Videorekorder). Ergebnis: eine einzige Videodatei.
+// Export der ganzen Kassette als eine Videodatei.
+// 1. Versuch: Schnell-Export (Aufnahmen werden ohne Neukodierung zusammengesetzt, siehe remux.js).
+// 2. Notfalls: Echtzeit-Überspielen (wie früher vom Camcorder auf den Videorekorder).
 
 import { getClip } from './db.js';
 import { tapeLength } from './tape.js';
+import { remuxTape, FallbackError } from './remux.js';
 
 const WIDTH = 640;
 const HEIGHT = 480;
@@ -29,8 +31,10 @@ export function startExport(tape, onProgress, firstUrl) {
   video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none';
   document.body.appendChild(video);
   // Im Klick mit dem ersten Clip anstoßen, damit das iPhone späteres play() erlaubt
+  // (stumm anstoßen und gleich wieder anhalten – der Ton wird nur im Notfall-Modus gebraucht)
   if (firstUrl) video.src = firstUrl;
-  video.play().catch(() => {});
+  video.muted = true;
+  const unlocked = video.play().then(() => video.pause()).catch(() => {});
 
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   const audio = AudioCtx ? new AudioCtx() : null;
@@ -39,7 +43,7 @@ export function startExport(tape, onProgress, firstUrl) {
   let cancelled = false;
   const cancel = () => { cancelled = true; };
 
-  const promise = (async () => {
+  const realtime = async () => {
     const total = tapeLength(tape);
     const canvas = document.createElement('canvas');
     canvas.width = WIDTH;
@@ -95,7 +99,7 @@ export function startExport(tape, onProgress, firstUrl) {
             const stalled = performance.now() - stalledSince > 5000;
             if (video.paused && !video.ended) video.play().catch(() => {});
             if (cancelled || stalled || video.ended || video.currentTime >= end - 0.03) { resolve(); return; }
-            onProgress(Math.min(total, seg.tapeStart + video.currentTime - seg.clipOffset), total);
+            onProgress(Math.min(total, seg.tapeStart + video.currentTime - seg.clipOffset), total, 'realtime');
             requestAnimationFrame(check);
           };
           check();
@@ -117,6 +121,31 @@ export function startExport(tape, onProgress, firstUrl) {
     const blob = new Blob(chunks, { type });
     const safeName = tape.name.replace(/[^\p{L}\p{N} _-]/gu, '').trim() || 'RetroCam';
     return new File([blob], `${safeName}.${ext}`, { type });
+  };
+
+  const cleanup = () => {
+    video.remove();
+    if (audio) audio.close().catch(() => {});
+    if (firstUrl) URL.revokeObjectURL(firstUrl);
+  };
+
+  const promise = (async () => {
+    try {
+      onProgress(0, tapeLength(tape), 'copy');
+      const file = await remuxTape(tape, {
+        onProgress,
+        isCancelled: () => cancelled,
+      });
+      cleanup();
+      return file;
+    } catch (e) {
+      if (cancelled) { cleanup(); return null; }
+      if (!(e instanceof FallbackError)) { cleanup(); throw e; }
+      console.warn('Schnell-Export nicht möglich, nehme Echtzeit:', e.message);
+      await unlocked;
+      video.muted = false;
+      return realtime();
+    }
   })();
 
   return { promise, cancel };

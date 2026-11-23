@@ -4,6 +4,7 @@ import { listTapes, putTape, deleteTape, getClip } from './db.js';
 import { newTape, tapeLength, timecode } from './tape.js';
 import { Deck } from './deck.js';
 import { startExport } from './exporter.js';
+import { cleanupExports } from './remux.js';
 
 const $ = (sel) => document.querySelector(sel);
 const home = $('#home');
@@ -133,7 +134,7 @@ async function tapeMenu(tape) {
     const firstUrl = firstBlob ? URL.createObjectURL(firstBlob) : null;
     const ok = await dialog({
       title: 'Als Video speichern',
-      text: `Die Kassette wird in Echtzeit überspielt (${timecode(tapeLength(tape))}). Lass die App so lange offen.`,
+      text: `Die Aufnahmen werden zu einem Video zusammengesetzt (${timecode(tapeLength(tape))}). Das geht meist schnell – lass die App bis dahin offen.`,
       buttons: [
         { label: 'Abbrechen', value: false },
         { label: 'Los', value: true, className: 'primary', action: () => runExport(tape, firstUrl) },
@@ -150,9 +151,17 @@ function runExport(tape, firstUrl) {
   const actions = $('#exportActions');
   overlay.classList.remove('hidden');
   actions.innerHTML = '';
-  status.textContent = 'Überspiele…';
-  const job = startExport(tape, (t, total) => {
-    status.textContent = `Überspiele… ${timecode(t)} / ${timecode(total)}`;
+  status.textContent = 'Setze zusammen…';
+  let wakeLock = null;
+  if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then((l) => { wakeLock = l; }).catch(() => {});
+  const releaseWakeLock = () => { if (wakeLock) wakeLock.release().catch(() => {}); wakeLock = null; };
+  const job = startExport(tape, (t, total, mode) => {
+    const pct = total > 0 ? Math.min(100, Math.round((t / total) * 100)) : 0;
+    status.textContent = mode === 'realtime'
+      ? `Schnell-Export ging bei dieser Kassette nicht – überspiele in Echtzeit… ${timecode(t)} / ${timecode(total)}`
+      : mode === 'transcode'
+        ? `Rechne um… ${pct} %`
+        : `Setze zusammen… ${pct} %`;
   }, firstUrl);
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Abbrechen';
@@ -160,6 +169,7 @@ function runExport(tape, firstUrl) {
   actions.appendChild(cancelBtn);
 
   job.promise.then((file) => {
+    releaseWakeLock();
     actions.innerHTML = '';
     if (!file) { overlay.classList.add('hidden'); return; }
     status.textContent = 'Fertig! Tippe auf „Teilen“ und dann „Video sichern“, um es in Fotos zu speichern.';
@@ -179,9 +189,13 @@ function runExport(tape, firstUrl) {
     });
     const close = document.createElement('button');
     close.textContent = 'Schließen';
-    close.addEventListener('click', () => overlay.classList.add('hidden'));
+    close.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      if (file.cleanup) file.cleanup(); // Zwischenspeicher wieder freigeben
+    });
     actions.append(share, close);
   }).catch((e) => {
+    releaseWakeLock();
     console.error(e);
     status.textContent = 'Export fehlgeschlagen: ' + (e && e.message ? e.message : e);
     actions.innerHTML = '';
@@ -200,6 +214,7 @@ const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 $('#installHint').classList.toggle('hidden', !isIOS || standalone);
 
+cleanupExports().catch(() => {});
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 if (document.fonts && document.fonts.load) document.fonts.load('44px VT323').catch(() => {});

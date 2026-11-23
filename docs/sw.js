@@ -1,8 +1,8 @@
 // Offline-Unterstützung: App-Dateien werden zwischengespeichert.
 // Netzwerk zuerst (damit Updates sofort ankommen), sonst aus dem Cache.
-const CACHE = 'retrocam-v1';
+const CACHE = 'retrocam-v2';
 const ASSETS = [
-  './', 'index.html', 'style.css', 'app.js', 'deck.js', 'db.js', 'tape.js', 'vhs.js', 'exporter.js',
+  './', 'index.html', 'style.css', 'app.js', 'deck.js', 'db.js', 'tape.js', 'vhs.js', 'exporter.js', 'remux.js', 'vendor/mp4-muxer.mjs', 'vendor/mp4box.all.min.js',
   'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 
