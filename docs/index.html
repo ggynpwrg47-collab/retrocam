@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>RetroCam</title>
+  <meta name="description" content="VHS-Camcorder im Browser">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RetroCam">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Startbildschirm: Kassetten -->
+  <section id="home">
+    <header>
+      <h1><span class="logo-dot"></span>RetroCam</h1>
+      <button id="newTape" class="primary">+ Kassette</button>
+    </header>
+    <p id="installHint" class="hint hidden">
+      Tipp: In Safari auf <b>Teilen</b> → <b>Zum Home-Bildschirm</b> tippen. Dann startet RetroCam wie eine normale App im Vollbild.
+    </p>
+    <ul id="tapeList"></ul>
+    <div id="empty" class="empty hidden">
+      <div class="big-cassette"><span class="label"></span><span class="reels"><i></i><i></i></span></div>
+      <p>Noch keine Kassetten.<br>Leg mit <b>+ Kassette</b> eine neue ein und fang an zu filmen.</p>
+    </div>
+    <footer id="storage"></footer>
+  </section>
+
+  <!-- Camcorder -->
+  <section id="deck" class="hidden">
+    <div class="screen-area">
+      <div id="screen">
+        <canvas id="live"></canvas>
+        <video id="vcr" playsinline webkit-playsinline preload="auto"></video>
+        <canvas id="fx" width="160" height="120"></canvas>
+        <div id="osd">
+          <div class="osd-top"><span id="osdMode">STBY</span><span id="osdCounter">0:00:00</span></div>
+          <div class="osd-bottom"><span id="osdHint"></span><span id="osdName"></span></div>
+        </div>
+        <div id="screenMessage" class="hidden"></div>
+      </div>
+      <canvas id="tapebar"></canvas>
+      <p class="portrait-hint">Quer halten für den echten Camcorder-Look</p>
+    </div>
+
+    <div class="controls">
+      <button id="btnEject" class="small">
+        <svg viewBox="0 0 24 24"><path d="M12 4l8 10H4zM4 17h16v3H4z"/></svg><span>EJECT</span>
+      </button>
+      <button id="btnRec" class="rec"><span class="dot"></span><span class="label">REC</span></button>
+      <div class="row">
+        <button id="btnRew" aria-label="Zurückspulen"><svg viewBox="0 0 24 24"><path d="M11 6v12L2 12zM21 6v12l-9-6z"/></svg></button>
+        <button id="btnFf" aria-label="Vorspulen"><svg viewBox="0 0 24 24"><path d="M13 6v12l9-6zM3 6v12l9-6z"/></svg></button>
+      </div>
+      <div class="row">
+        <button id="btnPlay" aria-label="Abspielen"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg></button>
+        <button id="btnStop" aria-label="Stopp"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button>
+      </div>
+      <button id="btnDate" class="small"><span>DATUM</span></button>
+    </div>
+
+    <!-- Unsichtbar: Kamerabild als Quelle für den VHS-Effekt -->
+    <video id="camVideo" muted playsinline webkit-playsinline autoplay></video>
+  </section>
+
+  <!-- Dialog -->
+  <div id="dialog" class="overlay hidden">
+    <div class="panel">
+      <h2 id="dialogTitle"></h2>
+      <p id="dialogText"></p>
+      <input id="dialogInput" type="text" maxlength="40" autocomplete="off">
+      <div id="dialogButtons" class="buttons"></div>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div id="exportOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Als Video speichern</h2>
+      <p id="exportStatus"></p>
+      <div id="exportActions" class="buttons"></div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
